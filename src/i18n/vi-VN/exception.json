@@ -1,0 +1,13 @@
+{
+  "internal_server_error": "Lỗi máy chủ",
+  "file_not_found": "Không tìm thấy tệp tin",
+  "read_file_error": "Đọc tệp tin thất bại",
+  "save_file_error": "Lưu tệp tin thất bại",
+  "get_file_system_stat_error": "Lấy thông tin tệp/thư mục thất bại",
+  "invalid_page_options_exception": "Tùy chọn trang không hợp lệ tại: \"{invalidQuery}\"",
+  "validation_failed": "Xác thực nội dung biểu mẫu thất bại",
+  "max_file_size": "Kích thước tệp không được lớn hơn {value}kb",
+  "invalid_file_type": "Phần mở rộng tệp phải là một trong các giá trị sau: {value}",
+  "file_is_required": "Tệp tin là bắt buộc",
+  "http_not_found": "Không tìm thấy"
+}

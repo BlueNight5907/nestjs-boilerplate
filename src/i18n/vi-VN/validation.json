@@ -1,0 +1,23 @@
+{
+  "NOT_EMPTY": "{property} không được để trống",
+  "INVALID_EMAIL": "email không hợp lệ",
+  "INVALID_PASSWORD": "password không hợp lệ",
+  "INVALID_BOOLEAN": "{property} không hợp lệ",
+  "INVALID_STRING": "{property} không phải là chuỗi",
+  "INVALID_NUMBER": "{property} không phải là một số",
+  "INVALID_INTEGER": "{property} không phải là số nguyên",
+  "INVALID_PHONE_NUMBER": "{property} không phải là số điện thoại hợp lệ",
+  "INVALID_UUID": "{property} không phải là UUID hợp lệ",
+  "INVALID_URL": "{property} không phải là Url hợp lệ",
+  "INVALID_DATE": "{property} không phải là ngày hợp lệ",
+  "INVALID_ENUM": "{property} phải là một trong các giá trị sau: {enumValues}",
+  "MIN": "{property} không được nhỏ hơn {constraints.0}",
+  "MAX": "{property} không được lớn hơn {constraints.0}",
+  "POSITIVE": "{property} phải là số dương",
+  "NOT_NULL": "{property} không được null",
+  "MIN_LENGTH": "{property} phải có độ dài lớn hơn hoặc bằng {constraints.0} ký tự",
+  "MAX_LENGTH": "{property} không được có độ dài hơn {constraints.0} ký tự",
+  "MIN_ITEMS": "{property} phải có nhiều hơn {constraints.0} phần tử",
+  "MAX_ITEMS": "{property} không được có nhiều hơn {constraints.0} phần tử",
+  "NESTED_CHILD": "{property} phải là mảng hoặc Object"
+}

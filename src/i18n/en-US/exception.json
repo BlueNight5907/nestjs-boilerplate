@@ -1,0 +1,13 @@
+{
+  "internal_server_error": "Internal server error",
+  "file_not_found": "File not found",
+  "read_file_error": "Read file error",
+  "save_file_error": "Save file error",
+  "get_file_system_stat_error": "Get file system stat error",
+  "invalid_page_options_exception": "Invalid page options at \"{invalidQuery}\"",
+  "validation_failed": "Validation failed",
+  "max_file_size": "File size should not exceed {value}kb",
+  "invalid_file_type": "File extension should be one of the following value: {value}",
+  "file_is_required": "File is required",
+  "http_not_found": "Not found"
+}

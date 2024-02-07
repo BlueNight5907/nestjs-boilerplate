@@ -1,0 +1,23 @@
+{
+  "NOT_EMPTY": "{property} cannot be empty",
+  "INVALID_EMAIL": "email is invalid",
+  "INVALID_PASSWORD": "password is invalid",
+  "INVALID_BOOLEAN": "{property} is not a boolean",
+  "INVALID_STRING": "{property} is not a string",
+  "INVALID_NUMBER": "{property} is not a number",
+  "INVALID_INTEGER": "{property} is not an integer",
+  "INVALID_PHONE_NUMBER": "{property} is not a phone number",
+  "INVALID_UUID": "{property} is not an UUID",
+  "INVALID_URL": "{property} is not an Url",
+  "INVALID_DATE": "{property} is not a date",
+  "INVALID_ENUM": "{property} should be in one of the following values: {enumValues}",
+  "MIN": "{property} with value: \"{value}\" needs to be at least {constraints.0}",
+  "MAX": "{property} with value: \"{value}\" needs to be less than {constraints.0}",
+  "POSITIVE": "{property} is not a positive",
+  "NOT_NULL": "{property} cannot be null",
+  "MIN_LENGTH": "{property} should have minimum length of {constraints.0} characters",
+  "MAX_LENGTH": "{property} should not exceed the maximum length of {constraints.0} characters",
+  "MIN_ITEMS": "{property} length should have minimum length of {constraints.0} items",
+  "MAX_ITEMS": "{property} length should not exceed the maximum length of {constraints.0} items",
+  "NESTED_CHILD": "{property} must be object or array"
+}
