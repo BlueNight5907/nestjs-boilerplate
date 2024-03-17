@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { type RoleType, TokenType } from 'enums';
-import { ApiConfigService } from 'shared/services';
-import { type Uuid } from 'types';
+import { type Uuid } from 'definitions/@types';
+import { type RoleType, TokenType } from 'definitions/enums';
+import { ApiConfigService } from 'shared/common';
 
-import { TokenPayloadDto } from './dto/token-payload.dto';
+import { TokenPayloadDto } from './dtos/token-payload.dto';
 
 @Injectable()
 export class AuthService {

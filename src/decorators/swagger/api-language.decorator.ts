@@ -1,5 +1,5 @@
 import { ApiHeader, ApiQuery } from '@nestjs/swagger';
-import { LanguageCode } from 'enums';
+import { LanguageCode } from 'definitions/enums';
 
 export function ApiLanguageDecorator(
   options: { from?: 'header' | 'query' } = {},

@@ -1,10 +1,12 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { BaseException } from 'common/exception';
+import { type IFile } from 'definitions/interfaces';
+
 import {
   FileIsRequiredException,
   InvalidFileTypeException,
   MaxFileSizeException,
-} from 'exceptions/file';
-import { type IFile } from 'interfaces';
-
+} from '../exceptions';
 import {
   type IFileValidationOptions,
   type IFileValidator,
@@ -14,27 +16,41 @@ export class FilesValidator implements IFileValidator {
   constructor(private readonly options: IFileValidationOptions = {}) {}
 
   validate(files?: IFile[]): void {
-    if (!files || files.length === 0) {
-      if (this.options.fileIsRequired) {
-        throw new FileIsRequiredException();
+    try {
+      if (!files || files.length === 0) {
+        if (this.options.fileIsRequired) {
+          throw new FileIsRequiredException(this.options.field);
+        }
+
+        return;
       }
 
-      return;
-    }
+      for (const file of files) {
+        if (this.options.maxFileSize && this.options.maxFileSize < file.size) {
+          throw new MaxFileSizeException(
+            this.options.maxFileSize,
+            this.options.field,
+          );
+        }
 
-    for (const file of files) {
-      if (this.options.maxFileSize && this.options.maxFileSize < file.size) {
-        throw new MaxFileSizeException(this.options.maxFileSize);
+        const fileExtension = file.originalname.split('.').at(-1);
+
+        if (
+          this.options.fileTypes &&
+          this.options.fileTypes.every((fileType) => fileType !== fileExtension)
+        ) {
+          throw new InvalidFileTypeException(
+            this.options.fileTypes,
+            this.options.field,
+          );
+        }
+      }
+    } catch (error) {
+      if (error instanceof BaseException) {
+        throw new HttpException(error, HttpStatus.BAD_REQUEST);
       }
 
-      const fileExtension = file.originalname.split('.').at(-1);
-
-      if (
-        this.options.fileTypes &&
-        this.options.fileTypes.every((fileType) => fileType !== fileExtension)
-      ) {
-        throw new InvalidFileTypeException(this.options.fileTypes);
-      }
+      throw error;
     }
   }
 }

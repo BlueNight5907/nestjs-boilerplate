@@ -1,4 +1,9 @@
-import { ClassSerializerInterceptor, HttpStatus } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  HttpStatus,
+  UnprocessableEntityException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import {
   ExpressAdapter,
@@ -6,24 +11,22 @@ import {
 } from '@nestjs/platform-express';
 import compression from 'compression';
 import { middleware as expressCtx } from 'express-ctx';
-import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { I18nValidationPipe } from 'nestjs-i18n';
-import { type ITranslationService } from 'shared/interfaces';
-import { TRANSLATION_SERVICE } from 'shared/provider-token';
+import { type ITranslationService } from 'shared/common/translation';
+import { TRANSLATION_SERVICE } from 'shared/provider-tokens';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
 import { AppModule } from './app.module';
 import {
-  AppExceptionFilter,
-  I18nValidationExceptionFilter,
-  NotFoundExceptionFilter,
-  QueryFailedFilter,
+  AllExceptionsFilter,
+  AppExceptionsFilter,
+  HttpExceptionFilter,
+  ValidationExceptionFilter,
 } from './filters';
 import { LanguageInterceptor, TranslationInterceptor } from './interceptors';
-import { setupSwagger } from './setup-swagger';
-import { ApiConfigService } from './shared/services';
+import { setupSwagger } from './setups';
+import { ApiConfigService } from './shared/common';
 import { SharedModule } from './shared/shared.module';
 
 export async function bootstrap(): Promise<NestExpressApplication> {
@@ -33,17 +36,15 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     new ExpressAdapter(),
     { cors: true },
   );
+
+  const configService = app.select(SharedModule).get(ApiConfigService);
+
   // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   // app.enable('trust proxy');
   app.use(helmet());
   // use api as global prefix if you don't have subdomain
   app.setGlobalPrefix('/api');
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 1000, // limit each IP to 100 requests per windowMs
-    }),
-  );
+
   app.use(compression());
   app.use(morgan('combined'));
   app.enableVersioning();
@@ -55,10 +56,10 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     .get<ITranslationService>(TRANSLATION_SERVICE);
 
   app.useGlobalFilters(
-    new NotFoundExceptionFilter(translationService),
-    new I18nValidationExceptionFilter(translationService),
-    new AppExceptionFilter(translationService),
-    new QueryFailedFilter(reflector),
+    new AllExceptionsFilter(translationService),
+    new AppExceptionsFilter(translationService),
+    new HttpExceptionFilter(translationService),
+    new ValidationExceptionFilter(translationService),
   );
 
   app.useGlobalInterceptors(
@@ -68,15 +69,14 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   );
 
   app.useGlobalPipes(
-    new I18nValidationPipe({
+    new ValidationPipe({
       whitelist: true,
-      transform: true,
       errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-      dismissDefaultMessages: true,
+      transform: true,
+      dismissDefaultMessages: false,
+      exceptionFactory: (errors) => new UnprocessableEntityException(errors),
     }),
   );
-
-  const configService = app.select(SharedModule).get(ApiConfigService);
 
   if (configService.documentationEnabled) {
     setupSwagger(app);

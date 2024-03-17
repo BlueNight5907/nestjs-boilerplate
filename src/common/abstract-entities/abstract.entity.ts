@@ -1,9 +1,9 @@
+import { Uuid } from 'definitions/@types';
 import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Uuid } from 'types';
 
 export interface IBaseEntity {
   id: Uuid;

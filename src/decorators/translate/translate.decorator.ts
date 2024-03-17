@@ -1,4 +1,4 @@
-import { type ITranslationOptions } from 'interfaces';
+import { type ITranslationOptions } from 'definitions/interfaces';
 
 export const STATIC_TRANSLATION_DECORATOR_KEY = 'custom:static-translate';
 export const DYNAMIC_TRANSLATION_DECORATOR_KEY = 'custom:dynamic-translate';

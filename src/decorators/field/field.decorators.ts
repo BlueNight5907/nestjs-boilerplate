@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable unicorn/no-null */
 import { applyDecorators } from '@nestjs/common';
 import { ApiProperty, type ApiPropertyOptions } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -25,10 +23,8 @@ import {
   NotEquals,
   ValidateNested,
 } from 'class-validator';
-import { supportedLanguageCount } from 'enums';
-import { i18nValidationMessage } from 'nestjs-i18n';
-import { COMMON_VALIDATION_KEY } from 'translation-keys';
-import { type Constructor } from 'types';
+import { type Constructor } from 'definitions/@types';
+import { supportedLanguageCount } from 'definitions/enums';
 
 import { ApiEnumProperty, ApiUUIDProperty } from './property.decorators';
 import {
@@ -79,7 +75,6 @@ export function NumberField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     Type(() => Number),
   ];
@@ -90,7 +85,6 @@ export function NumberField(
     decorators.push(
       NotEquals(null, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
       }),
     );
   }
@@ -107,7 +101,6 @@ export function NumberField(
     decorators.push(
       IsInt({
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_INTEGER),
       }),
     );
   } else {
@@ -116,7 +109,6 @@ export function NumberField(
         {},
         {
           each: options.each,
-          message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_NUMBER),
         },
       ),
     );
@@ -126,7 +118,6 @@ export function NumberField(
     decorators.push(
       Min(options.min, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.MIN),
       }),
     );
   }
@@ -135,7 +126,6 @@ export function NumberField(
     decorators.push(
       Max(options.max, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.MAX),
       }),
     );
   }
@@ -144,7 +134,6 @@ export function NumberField(
     decorators.push(
       IsPositive({
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.POSITIVE),
       }),
     );
   }
@@ -168,12 +157,10 @@ export function StringField(
   const decorators: PropertyDecorator[] = [
     IsNotEmpty({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     Type(() => String),
     IsString({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_STRING),
     }),
   ];
 
@@ -183,7 +170,6 @@ export function StringField(
     decorators.push(
       NotEquals(null, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
       }),
     );
   }
@@ -199,7 +185,6 @@ export function StringField(
   decorators.push(
     MinLength(minLength, {
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.MIN_LENGTH),
     }),
   );
 
@@ -207,7 +192,6 @@ export function StringField(
     decorators.push(
       MaxLength(options.maxLength, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.MAX_LENGTH),
       }),
     );
   }
@@ -239,19 +223,13 @@ export function PasswordField(
 ): PropertyDecorator {
   const decorators = [
     StringField({ ...options, minLength: 6 }),
-    IsPassword({
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_PASSWORD),
-    }),
+    IsPassword({}),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   return applyDecorators(...decorators);
@@ -273,22 +251,15 @@ export function BooleanField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     ToBoolean(),
-    IsBoolean({
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_BOOLEAN),
-    }),
+    IsBoolean({}),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -315,14 +286,9 @@ export function TranslationsField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
-    ArrayMinSize(supportedLanguageCount, {
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.MIN_ITEMS),
-    }),
-    ArrayMaxSize(supportedLanguageCount, {
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.MAX_ITEMS),
-    }),
+    ArrayMinSize(supportedLanguageCount, {}),
+    ArrayMaxSize(supportedLanguageCount, {}),
     ValidateNested({
       each: true,
     }),
@@ -332,11 +298,7 @@ export function TranslationsField(
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -367,11 +329,7 @@ export function TmpKeyField(
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -402,24 +360,16 @@ export function EnumField<TEnum extends Record<string, unknown>>(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     IsEnum(enumValue, {
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_ENUM, {
-        enumValues: Object.values(enumValue).join(', '),
-      }),
     }),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.each) {
@@ -445,26 +395,17 @@ export function ClassField<TClass extends Constructor>(
     Type(() => classValue),
     ValidateNested({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NESTED_CHILD),
     }),
   ];
 
   if (options.required !== false) {
-    decorators.push(
-      IsDefined({
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
-      }),
-    );
+    decorators.push(IsDefined({}));
   }
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -509,12 +450,7 @@ export function EmailField(
   options: Omit<ApiPropertyOptions, 'type'> & IStringFieldOptions = {},
 ): PropertyDecorator {
   const decorators = [
-    IsEmail(
-      {},
-      {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_EMAIL),
-      },
-    ),
+    IsEmail({}, {}),
     StringField({ toLowerCase: true, ...options }),
   ];
 
@@ -546,24 +482,15 @@ export function PhoneField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
-    IsPhoneNumber({
-      message: i18nValidationMessage(
-        COMMON_VALIDATION_KEY.INVALID_PHONE_NUMBER,
-      ),
-    }),
+    IsPhoneNumber({}),
     PhoneNumberSerializer(),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -589,23 +516,17 @@ export function UUIDField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     Type(() => String),
     IsUUID('4', {
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_UUID),
     }),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {
@@ -635,13 +556,11 @@ export function URLField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     IsUrl(
       {},
       {
         each: true,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_URL),
       },
     ),
   ];
@@ -652,7 +571,6 @@ export function URLField(
     decorators.push(
       NotEquals(null, {
         each: options.each,
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
       }),
     );
   }
@@ -675,22 +593,15 @@ export function DateField(
   const decorators = [
     IsDefined({
       each: options.each,
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_EMPTY),
     }),
     Type(() => Date),
-    IsDate({
-      message: i18nValidationMessage(COMMON_VALIDATION_KEY.INVALID_DATE),
-    }),
+    IsDate({}),
   ];
 
   if (options.nullable) {
     decorators.push(IsNullable());
   } else {
-    decorators.push(
-      NotEquals(null, {
-        message: i18nValidationMessage(COMMON_VALIDATION_KEY.NOT_NULL),
-      }),
-    );
+    decorators.push(NotEquals(null, {}));
   }
 
   if (options.swagger !== false) {

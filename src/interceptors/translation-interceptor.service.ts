@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { type Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
-import { ITranslationService } from 'shared/interfaces';
+import { ITranslationService } from 'shared/common/translation';
 
 import { type AbstractDto } from '../common/dtos/abstract.dto';
 

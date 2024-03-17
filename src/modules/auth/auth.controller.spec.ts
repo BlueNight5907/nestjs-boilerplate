@@ -1,6 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-
-import { AppModule } from './../../app.module';
+import { AppModule } from 'app.module';
 
 describe('AuthController', () => {
   let app: TestingModule;

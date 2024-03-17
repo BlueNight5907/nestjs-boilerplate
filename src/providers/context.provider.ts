@@ -1,6 +1,6 @@
 import { getValue, setValue } from 'express-ctx';
 
-import { type LanguageCode } from '../enums';
+import { type LanguageCode } from '../definitions/enums';
 
 export class ContextProvider {
   private static readonly nameSpace = 'request';

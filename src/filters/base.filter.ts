@@ -1,12 +1,13 @@
 import { type ArgumentsHost, type ExceptionFilter } from '@nestjs/common';
+import { type IExceptionResponse } from 'definitions/interfaces';
 import { type Request, type Response } from 'express';
-import { type IExceptionResponse } from 'interfaces';
-import { type ITranslationService } from 'shared/interfaces';
+import { type ITranslationService } from 'shared/common/translation';
+import { v4 } from 'uuid';
 
-export interface IParseExceptionResult extends Record<string, unknown> {
-  code: number;
+export interface IParseExceptionResult {
+  code: string;
   status: number;
-  messageKey: string;
+  message: string;
   type: string;
   args?: Record<string, unknown>;
 }
@@ -17,58 +18,41 @@ export abstract class BaseFilter implements ExceptionFilter {
   protected abstract parseException(
     exception: unknown,
     host: ArgumentsHost,
-  ): IParseExceptionResult;
+  ): IParseExceptionResult & Record<string, unknown>;
 
   private buildResponseBody(
-    data: {
-      message: string;
-      path: string;
-      url: string;
-      code: number;
-      type: string;
-      method: string;
-    } & Record<string, unknown>,
+    data: Omit<IParseExceptionResult, 'status'> & Record<string, unknown>,
+    request: Request,
   ): IExceptionResponse {
-    return {
-      ...data,
-      timestamp: new Date(),
-    };
-  }
-
-  protected getTranslationPrefix() {
-    return 'exception';
-  }
-
-  async catch(exception: unknown, host: ArgumentsHost) {
-    const request: Request = host.switchToHttp().getRequest();
-    const response: Response = host.switchToHttp().getResponse();
-
+    const id = v4();
     const url = `${request.protocol}://${request.get('host')}${
       request.originalUrl
     }`;
-
     const method = request.method;
+    const { code, message, type, args, ...others } = data;
 
-    const { code, messageKey, status, args, type, ...others } =
-      this.parseException(exception, host);
-
-    const message = await this.translationService.translate(
-      `${this.getTranslationPrefix()}.${messageKey}`,
-      {
-        defaultValue: messageKey,
-        args,
-      },
-    );
-
-    const responseBody = this.buildResponseBody({
-      message,
-      url,
-      code,
+    return {
+      id,
       type,
+      code,
+      message,
+      args,
       method,
       path: request.path,
+      url,
+      timestamp: new Date(),
+
       ...others,
-    });
+    };
+  }
+
+  catch(exception: unknown, host: ArgumentsHost) {
+    const request: Request = host.switchToHttp().getRequest();
+    const response: Response = host.switchToHttp().getResponse();
+
+    const { status, ...others } = this.parseException(exception, host);
+
+    const responseBody = this.buildResponseBody(others, request);
 
     response.status(status).json(responseBody);
   }

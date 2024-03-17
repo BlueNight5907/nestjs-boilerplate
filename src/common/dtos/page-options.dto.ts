@@ -1,5 +1,5 @@
 import { NumberFieldOptional } from 'decorators/field';
-import { type IPageOptions } from 'interfaces';
+import { type IPageOptions } from 'definitions/interfaces';
 
 export class PageOptionsDto implements IPageOptions {
   @NumberFieldOptional({

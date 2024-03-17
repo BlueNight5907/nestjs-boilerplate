@@ -1,10 +1,9 @@
 import { applyDecorators, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { type RoleType } from 'definitions/enums';
+import { AuthGuard, RolesGuard } from 'guards';
+import { AuthUserInterceptor } from 'interceptors';
 
-import { type RoleType } from '../../enums';
-import { AuthGuard } from '../../guards/auth.guard';
-import { RolesGuard } from '../../guards/roles.guard';
-import { AuthUserInterceptor } from '../../interceptors/auth-user-interceptor.service';
 import { PublicRoute } from './public-route.decorator';
 import { Roles } from './roles.decorator';
 

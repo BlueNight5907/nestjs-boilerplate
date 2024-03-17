@@ -18,5 +18,5 @@ export const dataSource = new DataSource({
     'src/modules/**/*.entity{.ts,.js}',
     'src/modules/**/*.view-entity{.ts,.js}',
   ],
-  migrations: ['src/database/migrations/*{.ts,.js}'],
+  migrations: ['src/database/typeorm/migrations/*{.ts,.js}'],
 });

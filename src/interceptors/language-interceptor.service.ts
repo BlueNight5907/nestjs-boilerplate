@@ -5,7 +5,7 @@ import {
   type NestInterceptor,
   UseInterceptors,
 } from '@nestjs/common';
-import { LanguageCode } from 'enums';
+import { LanguageCode } from 'definitions/enums';
 import { I18nContext } from 'nestjs-i18n';
 import { ContextProvider } from 'providers';
 

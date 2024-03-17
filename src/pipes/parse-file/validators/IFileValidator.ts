@@ -2,10 +2,11 @@ export interface IFileValidationOptions {
   fileIsRequired?: boolean;
   maxFileSize?: number;
   fileTypes?: string[];
+  field?: string;
 }
 
-export interface IFileFieldValidationOption extends IFileValidationOptions {
-  fileName: string;
+export interface IFileFieldValidationOptions extends IFileValidationOptions {
+  field: string;
 }
 
 export interface IFileValidator {

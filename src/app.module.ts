@@ -2,19 +2,20 @@ import path from 'node:path';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
+import { seconds, ThrottlerModule } from '@nestjs/throttler';
+import { DatabaseModule } from 'database/database.module';
+import { ThrottlerBehindProxyGuard } from 'guards';
 import {
   AcceptLanguageResolver,
   HeaderResolver,
   I18nModule,
   QueryResolver,
 } from 'nestjs-i18n';
-import { DataSource } from 'typeorm';
-import { addTransactionalDataSource } from 'typeorm-transactional';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
-import { ApiConfigService } from './shared/services/api-config.service';
+import { ApiConfigService } from './shared/common/api-config/api-config.service';
 import { SharedModule } from './shared/shared.module';
 
 @Module({
@@ -25,21 +26,7 @@ import { SharedModule } from './shared/shared.module';
         process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''
       }`,
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [SharedModule],
-      useFactory: (configService: ApiConfigService) =>
-        configService.mySqlConfig,
-      inject: [ApiConfigService],
-      dataSourceFactory: (options) => {
-        if (!options) {
-          throw new Error('Invalid options passed');
-        }
-
-        return Promise.resolve(
-          addTransactionalDataSource(new DataSource(options)),
-        );
-      },
-    }),
+    DatabaseModule,
     I18nModule.forRootAsync({
       useFactory: (configService: ApiConfigService) => ({
         fallbackLanguage: configService.fallbackLanguage,
@@ -56,9 +43,30 @@ import { SharedModule } from './shared/shared.module';
       imports: [SharedModule],
       inject: [ApiConfigService],
     }),
+    ThrottlerModule.forRootAsync({
+      imports: [SharedModule],
+      inject: [ApiConfigService],
+      useFactory: (config: ApiConfigService) => ({
+        throttlers: [
+          {
+            ttl: seconds(config.appConfig.throttleTTL),
+            limit: config.appConfig.requestLimit,
+            ignoreUserAgents: [
+              new RegExp('googlebot', 'gi'),
+              new RegExp('bingbot', 'gi'),
+            ],
+          },
+        ],
+      }),
+    }),
     HealthCheckerModule,
     AuthModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerBehindProxyGuard,
+    },
+  ],
 })
 export class AppModule {}

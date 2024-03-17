@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { StrategyType } from 'definitions/enums';
+import { ApiConfigService } from 'shared/common/api-config';
 
-import { ApiConfigService } from '../../shared/services/api-config.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { PublicStrategy } from './public.strategy';
+import { JwtStrategy, PublicStrategy } from './strategies';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: StrategyType.JWT }),
     JwtModule.registerAsync({
       useFactory: (configService: ApiConfigService) => ({
         privateKey: configService.authConfig.privateKey,

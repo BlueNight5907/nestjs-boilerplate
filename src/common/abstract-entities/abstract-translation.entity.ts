@@ -1,6 +1,6 @@
 import { Column } from 'typeorm';
 
-import { LanguageCode } from '../../enums';
+import { LanguageCode } from '../../definitions/enums';
 import { AbstractEntity } from './abstract.entity';
 
 export interface IAbstractTranslationEntity {

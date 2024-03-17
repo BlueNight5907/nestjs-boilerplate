@@ -1,5 +1,13 @@
-import { Body, Controller, Post, UploadedFiles } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Post,
+  UploadedFiles,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   BooleanField,
   BooleanFieldOptional,
@@ -18,11 +26,11 @@ import {
   ApiExceptionDecorator,
   ApiLanguageDecorator,
 } from 'decorators/swagger';
-import { Order } from 'enums';
-import { FileNotFoundException, SaveFileException } from 'exceptions/file';
-import { type IFile } from 'interfaces';
+import { Order } from 'definitions/enums';
+import { type IFile } from 'definitions/interfaces';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { ParseFilePipe } from 'pipes/parse-file';
+import { FileIsRequiredException } from 'pipes/parse-file/exceptions';
 import { FilesValidator } from 'pipes/parse-file/validators';
 
 class TestChild {
@@ -43,7 +51,7 @@ class TestChild {
 }
 
 class TestDto {
-  @StringField({ each: true })
+  @StringField({ each: true, maxLength: 5 })
   name: string[];
 
   @NumberField()
@@ -59,7 +67,7 @@ class TestDto {
   order: Order;
 
   @ClassField(() => TestChild, { nullable: true })
-  child: TestChild;
+  child?: TestChild;
 }
 
 @Controller('auth')
@@ -67,25 +75,30 @@ class TestDto {
 export class AuthController {
   @Post()
   @ApiLanguageDecorator({ from: 'query' })
-  @UploadFiles([{ name: 'file2' }], { isRequired: true })
-  @ApiExceptionDecorator({
-    exception: new FileNotFoundException('sample'),
-    status: 400,
-    descriptions: 'File not found',
-  })
-  @ApiExceptionDecorator({
-    exception: new SaveFileException('sample'),
-    status: 400,
-    descriptions: 'File not found',
-  })
+  @UploadFiles([{ name: 'sample', isArray: true }], { isRequired: true })
+  @ApiExceptionDecorator(
+    {
+      exception: new FileIsRequiredException('sample'),
+      status: 400,
+      descriptions: 'File is Required',
+    },
+    {
+      exception: new NotFoundException('abc'),
+      status: 400,
+      descriptions: 'File not found',
+      code: 'aaa',
+      type: 'abc',
+    },
+  )
   test(
     @I18n() i18n: I18nContext,
     @UploadedFiles(
       new ParseFilePipe(
         new FilesValidator({
           fileIsRequired: true,
-          fileTypes: ['jpg', 'png'],
+          fileTypes: ['jpg', 'png', 'jpeg'],
           maxFileSize: 1024 * 1024 * 1024,
+          field: 'sample',
         }),
       ),
     )
@@ -105,5 +118,11 @@ export class AuthController {
     return {
       body,
     };
+  }
+
+  @Get('test2')
+  @SkipThrottle()
+  test3() {
+    throw new FileIsRequiredException('sample');
   }
 }

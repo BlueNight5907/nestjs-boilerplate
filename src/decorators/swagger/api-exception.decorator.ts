@@ -1,54 +1,109 @@
-import { applyDecorators } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/naming-convention */
+import { applyDecorators, HttpException } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { type BaseError } from 'common/BaseError';
+import { BaseException } from 'common/exception/BaseException';
+import { type IExceptionResponse } from 'definitions/interfaces';
+import { v4 } from 'uuid';
 
-export function ApiExceptionDecorator(
-  ...list: Array<{
-    status: number | 'default' | '1XX' | '2XX' | '3XX' | '4XX' | '5XX';
-    descriptions?: string;
-    exception: BaseError;
-  }>
-) {
+interface IAppExceptionOptions {
+  status: number | 'default' | '1XX' | '2XX' | '3XX' | '4XX' | '5XX';
+  descriptions?: string;
+  exception: BaseException;
+}
+
+interface ICommonHttpExceptionOptions {
+  status: number | 'default' | '1XX' | '2XX' | '3XX' | '4XX' | '5XX';
+  descriptions?: string;
+  exception: HttpException;
+  code: string;
+  type: string;
+}
+
+interface IParseExceptionResult {
+  title: string;
+  content: {
+    description?: string;
+    value: IExceptionResponse;
+  };
+}
+
+type ApiExceptionItem = IAppExceptionOptions | ICommonHttpExceptionOptions;
+
+type Status = number | 'default' | '1XX' | '2XX' | '3XX' | '4XX' | '5XX';
+
+function exceptionToJson(data: ApiExceptionItem): IParseExceptionResult {
+  let body: IExceptionResponse = {} as IExceptionResponse;
+
+  if (data.exception instanceof HttpException) {
+    data = data as ICommonHttpExceptionOptions;
+    body = {
+      id: v4(),
+      message: data.exception.message,
+      code: data.code,
+      type: data.type,
+      url: '{protocol}://{full_url}',
+      path: '/path/to/something',
+      method: 'GET, POST, PUT, PATCH, DELETE',
+      timestamp: new Date(),
+    };
+  }
+
+  if (data.exception instanceof BaseException) {
+    body = {
+      id: v4(),
+      message: data.exception.message,
+      code: data.exception.code,
+      type: data.exception.constructor.name,
+      args: data.exception.args,
+      url: '{protocol}://{full_url}',
+      path: '/path/to/something',
+      method: 'GET, POST, PUT, PATCH, DELETE',
+      timestamp: new Date(),
+    };
+  }
+
+  return {
+    content: { description: data.descriptions, value: body },
+    title: body.type,
+  };
+}
+
+export function ApiExceptionDecorator(...list: ApiExceptionItem[]) {
   const decorators: Array<MethodDecorator & ClassDecorator> = [];
+  const mapByStatus: Record<Status, ApiExceptionItem[] | undefined> =
+    {} as Record<Status, ApiExceptionItem[]>;
 
   for (const options of list) {
+    const mapValue = mapByStatus[options.status];
+
+    if (mapValue) {
+      mapValue.push(options);
+      continue;
+    }
+
+    mapByStatus[options.status] = [options];
+  }
+
+  for (const [status, optionsList] of Object.entries(mapByStatus)) {
+    const schemas: Record<
+      string,
+      {
+        description?: string;
+        value: any;
+      }
+    > = {};
+
+    for (const options of optionsList!) {
+      const parseValue = exceptionToJson(options);
+      schemas[parseValue.title] = parseValue.content;
+    }
+
     decorators.push(
       ApiResponse({
-        status: options.status,
-        description: options.descriptions,
-        schema: {
-          properties: {
-            message: {
-              type: 'number',
-              example: options.exception.message,
-            },
-
-            code: {
-              type: 'number',
-              example: options.exception.code,
-            },
-            args: { type: 'object', example: options.exception.args },
-            type: {
-              type: 'string',
-              example: options.exception.constructor.name,
-            },
-            url: {
-              type: 'string',
-              example: '{protocol}://{full_url}',
-            },
-            path: {
-              type: 'string',
-              example: '/path/to/something',
-            },
-            method: {
-              type: 'string',
-              example: 'GET',
-              description: 'GET, POST, PUT, PATCH, DELETE',
-            },
-            timestamp: {
-              type: 'Date',
-              example: new Date().toISOString(),
-            },
+        status: status as Status,
+        content: {
+          'application/json': {
+            examples: schemas,
           },
         },
       }),

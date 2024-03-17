@@ -1,22 +1,22 @@
 import { type ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
-import { BaseError } from 'common/BaseError';
+import { BaseException } from 'common/exception';
 
 import { BaseFilter, type IParseExceptionResult } from './base.filter';
 
-@Catch(BaseError)
-export class AppExceptionFilter extends BaseFilter {
+@Catch(BaseException)
+export class AppExceptionsFilter extends BaseFilter {
   protected parseException(
-    exception: BaseError,
+    exception: BaseException,
     _host: ArgumentsHost,
-  ): IParseExceptionResult {
-    const status = exception.httpStatus ?? HttpStatus.BAD_REQUEST;
+  ): IParseExceptionResult & Record<string, unknown> {
+    const status = HttpStatus.BAD_REQUEST;
 
     return {
-      messageKey: exception.message,
       status,
+      message: exception.message,
       code: exception.code,
-      args: exception.args,
       type: exception.constructor.name,
+      args: exception.args,
     };
   }
 }
