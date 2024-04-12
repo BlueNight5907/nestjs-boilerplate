@@ -4,7 +4,8 @@
   },
   "compilerOptions": {
     "rootDir": "src",
-    "module": "commonjs",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "declaration": false,
     "noImplicitAny": false,
     "removeComments": true,

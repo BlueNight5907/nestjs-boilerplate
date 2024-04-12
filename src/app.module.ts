@@ -1,30 +1,34 @@
 import path from 'node:path';
 
-import { Module } from '@nestjs/common';
+import {
+  type MiddlewareConsumer,
+  Module,
+  type NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { seconds, ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from 'database/database.module';
 import { ThrottlerBehindProxyGuard } from 'guards';
+import { GenerateContextIdMiddleware } from 'middlewares';
+import { AuthModule } from 'modules/auth/auth.module';
+import { HealthCheckerModule } from 'modules/health-checker/health-checker.module';
 import {
   AcceptLanguageResolver,
   HeaderResolver,
   I18nModule,
   QueryResolver,
 } from 'nestjs-i18n';
-
-import { AuthModule } from './modules/auth/auth.module';
-import { HealthCheckerModule } from './modules/health-checker/health-checker.module';
-import { ApiConfigService } from './shared/common/api-config/api-config.service';
-import { SharedModule } from './shared/shared.module';
+import { setupThrottlerStorage } from 'setups';
+import { ApiConfigService } from 'shared/common';
+import { SharedModule } from 'shared/shared.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env${
-        process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''
-      }`,
+      envFilePath: process.env.ENV_FILE ?? `.env`,
     }),
     DatabaseModule,
     I18nModule.forRootAsync({
@@ -55,8 +59,15 @@ import { SharedModule } from './shared/shared.module';
               new RegExp('googlebot', 'gi'),
               new RegExp('bingbot', 'gi'),
             ],
+            name: 'limit_ip',
           },
         ],
+        generateKey: (
+          _context: unknown,
+          trackerString: string,
+          throttlerName: string,
+        ) => `${throttlerName}_${trackerString}`,
+        storage: setupThrottlerStorage({ ...config.redisConfig }),
       }),
     }),
     HealthCheckerModule,
@@ -69,4 +80,10 @@ import { SharedModule } from './shared/shared.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(GenerateContextIdMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 type Join<K, P> = K extends string
   ? P extends string
     ? `${K}${'' extends P ? '' : '.'}${P | `(${P}` | `${P})`}`
@@ -40,3 +41,17 @@ export type KeyOfType<Entity, U> = {
     ? P
     : never;
 }[keyof Entity];
+
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
+// Class method
+type FunctionPropertyNames<T> = {
+  [K in keyof T]: T[K] extends Function ? K : never;
+}[keyof T];
+
+export type FunctionProperties<T> = Pick<T, FunctionPropertyNames<T>>;
+
+type NonFunctionPropertyNames<T> = {
+  [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+export type NonFunctionProperties<T> = Pick<T, NonFunctionPropertyNames<T>>;

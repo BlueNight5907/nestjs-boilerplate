@@ -14,13 +14,12 @@ import { middleware as expressCtx } from 'express-ctx';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { type ITranslationService } from 'shared/common/translation';
-import { TRANSLATION_SERVICE } from 'shared/provider-tokens';
+import { TRANSLATION_SERVICE } from 'shared/tokens';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
 import { AppModule } from './app.module';
 import {
   AllExceptionsFilter,
-  AppExceptionsFilter,
   HttpExceptionFilter,
   ValidationExceptionFilter,
 } from './filters';
@@ -57,7 +56,6 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   app.useGlobalFilters(
     new AllExceptionsFilter(translationService),
-    new AppExceptionsFilter(translationService),
     new HttpExceptionFilter(translationService),
     new ValidationExceptionFilter(translationService),
   );

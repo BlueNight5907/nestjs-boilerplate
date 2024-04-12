@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { type TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { isNil } from 'lodash';
-
-import { SnakeNamingStrategy } from '../../../snake-naming.strategy';
+import { SnakeNamingStrategy } from 'setups/snake-naming.strategy';
 
 @Injectable()
 export class ApiConfigService {
@@ -135,6 +134,9 @@ export class ApiConfigService {
       port: this.getString('PORT'),
       requestLimit: this.getNumber('REQUEST_LIMIT'),
       throttleTTL: this.getNumber('THROTTLE_TTL'),
+      appName: this.getString('APP_NAME'),
+      logPrefix: this.getString('APP_LOG_PREFIX'),
+      auditLogPrefix: this.getString('APP_AUDIT_LOG_PREFIX'),
     };
   }
 
@@ -155,6 +157,25 @@ export class ApiConfigService {
       port: this.getNumber('REDIS_PORT'),
       username,
       password,
+    };
+  }
+
+  get nodeCacheConfig() {
+    let maxKeys: number | undefined;
+    let isDeleteOnExpire: boolean | undefined;
+
+    try {
+      maxKeys = this.getNumber('NODE_CACHE_MAX_ITEMS');
+      isDeleteOnExpire = this.getBoolean('NODE_CACHE_DELETE_ON_EXPIRE');
+    } catch {
+      maxKeys = undefined;
+      isDeleteOnExpire = undefined;
+    }
+
+    return {
+      stdTTL: this.getNumber('NODE_CACHE_TTL'),
+      maxKeys,
+      deleteOnExpire: isDeleteOnExpire,
     };
   }
 

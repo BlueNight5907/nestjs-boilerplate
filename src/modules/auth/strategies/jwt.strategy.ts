@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { type Uuid } from 'definitions/@types';
 import { type RoleType, StrategyType, TokenType } from 'definitions/enums';
@@ -15,10 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, StrategyType.JWT) {
   }
 
   validate(args: { userId: Uuid; role: RoleType; type: TokenType }): boolean {
-    if (args.type !== TokenType.ACCESS_TOKEN) {
-      throw new UnauthorizedException();
-    }
-
-    return true;
+    return !(args.type !== TokenType.ACCESS_TOKEN);
   }
 }

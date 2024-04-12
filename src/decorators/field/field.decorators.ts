@@ -25,10 +25,12 @@ import {
 } from 'class-validator';
 import { type Constructor } from 'definitions/@types';
 import { supportedLanguageCount } from 'definitions/enums';
+import { type IParseOptions } from 'qs';
 
 import { ApiEnumProperty, ApiUUIDProperty } from './property.decorators';
 import {
   PhoneNumberSerializer,
+  QueryStringParser,
   ToArray,
   ToBoolean,
   ToLowerCase,
@@ -65,7 +67,10 @@ interface IStringFieldOptions extends IFieldOptions {
   toUpperCase?: boolean;
 }
 
-type IClassFieldOptions = IFieldOptions;
+type IClassFieldOptions = IFieldOptions & {
+  isObjectFromQs?: boolean;
+  qsOptions?: IParseOptions & { isArray?: boolean; fallback?: unknown };
+};
 type IBooleanFieldOptions = IFieldOptions;
 type IEnumFieldOptions = IFieldOptions;
 
@@ -411,7 +416,8 @@ export function ClassField<TClass extends Constructor>(
   if (options.swagger !== false) {
     decorators.push(
       ApiProperty({
-        type: () => classValue,
+        type: options.isObjectFromQs && options.each ? 'string' : classValue,
+        isArray: options.each,
         ...options,
       }),
     );
@@ -419,6 +425,16 @@ export function ClassField<TClass extends Constructor>(
 
   if (options.each) {
     decorators.push(ToArray());
+  }
+
+  if (options.isObjectFromQs) {
+    decorators.push(
+      QueryStringParser({
+        ...options.qsOptions,
+        isArray: options.each,
+        getClass,
+      }),
+    );
   }
 
   return applyDecorators(...decorators);

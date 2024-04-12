@@ -2,7 +2,6 @@ import {
   type ArgumentsHost,
   Catch,
   HttpException,
-  HttpStatus,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,9 +11,9 @@ import { BaseFilter, type IParseExceptionResult } from './base.filter';
 
 @Catch(HttpException)
 export class HttpExceptionFilter extends BaseFilter {
-  private handleCommonHttpException(
+  private handleHttpExceptionResponse(
     exception: HttpException,
-  ): IParseExceptionResult & Record<string, unknown> {
+  ): IParseExceptionResult {
     const body: IParseExceptionResult & Record<string, unknown> = {
       code: ERROR_CODE.HTTP_UNHANDLED,
       message: exception.message,
@@ -33,10 +32,10 @@ export class HttpExceptionFilter extends BaseFilter {
     return body;
   }
 
-  handleAppException(
+  handleAppExceptionResponse(
     exception: BaseException,
     status: number,
-  ): IParseExceptionResult & Record<string, unknown> {
+  ): IParseExceptionResult {
     return {
       status,
       message: exception.message,
@@ -49,14 +48,16 @@ export class HttpExceptionFilter extends BaseFilter {
   protected parseException(
     exception: HttpException,
     _host: ArgumentsHost,
-  ): IParseExceptionResult & Record<string, unknown> {
-    const status = HttpStatus.BAD_REQUEST;
+  ): IParseExceptionResult {
     const exceptionContent = exception.getResponse() as string | BaseException;
 
     if (exceptionContent instanceof BaseException) {
-      return this.handleAppException(exceptionContent, status);
+      return this.handleAppExceptionResponse(
+        exceptionContent,
+        exception.getStatus(),
+      );
     }
 
-    return this.handleCommonHttpException(exception);
+    return this.handleHttpExceptionResponse(exception);
   }
 }

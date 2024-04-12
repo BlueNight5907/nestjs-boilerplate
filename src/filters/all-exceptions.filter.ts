@@ -8,7 +8,7 @@ export class AllExceptionsFilter extends BaseFilter {
   protected parseException(
     _exception: Error,
     _host: ArgumentsHost,
-  ): IParseExceptionResult & Record<string, unknown> {
+  ): IParseExceptionResult {
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
     return {

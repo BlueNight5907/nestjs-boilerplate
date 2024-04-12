@@ -1,7 +1,9 @@
-import { Transform, TransformationType } from 'class-transformer';
-import { Generator } from 'common/utils';
+import { Transform } from 'class-transformer';
+import { parseQueryStringToObject } from 'common/utils';
+import { type Constructor } from 'definitions/@types';
 import { parsePhoneNumber } from 'libphonenumber-js';
 import { castArray, isArray, isNil, map, trim } from 'lodash';
+import { type IParseOptions } from 'qs';
 
 /**
  * @description trim spaces from start and end, replace multiple spaces with one.
@@ -147,26 +149,31 @@ export function ToUpperCase(): PropertyDecorator {
   );
 }
 
-export function S3UrlParser(): PropertyDecorator {
-  return Transform((params) => {
-    const key = params.value as string;
-
-    switch (params.type) {
-      case TransformationType.CLASS_TO_PLAIN: {
-        return Generator.getS3PublicUrl(key);
-      }
-
-      case TransformationType.PLAIN_TO_CLASS: {
-        return Generator.getS3Key(key);
-      }
-
-      default: {
-        return key;
-      }
-    }
-  });
-}
-
 export function PhoneNumberSerializer(): PropertyDecorator {
   return Transform((params) => parsePhoneNumber(params.value as string).number);
+}
+
+export function QueryStringParser<TClass extends Constructor>(
+  options?: IParseOptions & {
+    isArray?: boolean;
+    fallback?: unknown;
+    getClass?: () => TClass;
+  },
+): PropertyDecorator {
+  return Transform(
+    (params): unknown => {
+      if (!options?.isArray) {
+        return parseQueryStringToObject(params.value, options);
+      }
+
+      try {
+        const arr = params.value as unknown[];
+
+        return arr.map((item) => parseQueryStringToObject(item, options));
+      } catch {
+        return undefined;
+      }
+    },
+    { toClassOnly: true },
+  );
 }

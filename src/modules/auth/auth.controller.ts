@@ -1,27 +1,21 @@
+import { QueueEventsListener } from '@nestjs/bullmq';
 import {
   Body,
   Controller,
-  Get,
+  Inject,
   NotFoundException,
   Post,
   UploadedFiles,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
 import {
   BooleanField,
-  BooleanFieldOptional,
-  ClassField,
   EmailField,
-  EmailFieldOptional,
   EnumField,
-  EnumFieldOptional,
   NumberField,
-  NumberFieldOptional,
   StringField,
-  StringFieldOptional,
 } from 'decorators/field';
-import { UploadFiles } from 'decorators/http';
+import { AuditLogDecorator, UploadFiles } from 'decorators/http';
 import {
   ApiExceptionDecorator,
   ApiLanguageDecorator,
@@ -29,26 +23,18 @@ import {
 import { Order } from 'definitions/enums';
 import { type IFile } from 'definitions/interfaces';
 import { I18n, I18nContext } from 'nestjs-i18n';
-import { ParseFilePipe } from 'pipes/parse-file';
-import { FileIsRequiredException } from 'pipes/parse-file/exceptions';
-import { FilesValidator } from 'pipes/parse-file/validators';
+import {
+  FileIsRequiredException,
+  FilesValidator,
+  ParseFilePipe,
+} from 'pipes/parse-file';
+import { ICacheManager, InjectMemoryCache } from 'shared/caching';
+import { IEventEmitter, REDIS_EE2_EVENT_EMITTER } from 'shared/event-bus';
+import { WINSTON_LOGGER_SERVICE } from 'shared/logger';
+import { ILoggerService } from 'shared/logger/core/interfaces';
+import { InjectQueue, IQueue } from 'shared/queue';
 
-class TestChild {
-  @StringFieldOptional()
-  name?: string;
-
-  @NumberFieldOptional()
-  age?: number;
-
-  @BooleanFieldOptional()
-  male?: boolean;
-
-  @EmailFieldOptional()
-  email?: string;
-
-  @EnumFieldOptional(() => Order)
-  order?: Order;
-}
+import { TestEvent } from './events/test.event';
 
 class TestDto {
   @StringField({ each: true, maxLength: 5 })
@@ -60,19 +46,29 @@ class TestDto {
   @BooleanField()
   male: boolean;
 
-  @EmailField()
+  @EmailField({ example: 'a@a.com' })
   email: string;
 
   @EnumField(() => Order)
   order: Order;
-
-  @ClassField(() => TestChild, { nullable: true })
-  child?: TestChild;
 }
 
 @Controller('auth')
 @ApiTags('auth')
+@QueueEventsListener('test')
 export class AuthController {
+  constructor(
+    @Inject(WINSTON_LOGGER_SERVICE)
+    private readonly loggerService: ILoggerService,
+    @Inject(REDIS_EE2_EVENT_EMITTER)
+    private readonly eventEmitter: IEventEmitter,
+    @InjectQueue('test') private readonly queue: IQueue,
+    @InjectMemoryCache('abc')
+    private readonly memoryCacheManager: ICacheManager,
+  ) {
+    this.loggerService.setContext(AuthController.name);
+  }
+
   @Post()
   @ApiLanguageDecorator({ from: 'query' })
   @UploadFiles([{ name: 'sample', isArray: true }], { isRequired: true })
@@ -104,8 +100,6 @@ export class AuthController {
     )
     files: IFile[],
   ) {
-    console.info(files);
-
     return {
       trans: i18n.t('admin.keywords.admin'),
       files: files.length,
@@ -114,15 +108,19 @@ export class AuthController {
 
   @Post('/test')
   @ApiLanguageDecorator({ from: 'query' })
-  test2(@Body() body: TestDto) {
-    return {
-      body,
-    };
-  }
+  @AuditLogDecorator()
+  async test1(@Body() body: TestDto) {
+    await this.eventEmitter.emit(new TestEvent('send from 3000'));
 
-  @Get('test2')
-  @SkipThrottle()
-  test3() {
-    throw new FileIsRequiredException('sample');
+    this.queue
+      .add<TestDto, string>('hello', body)
+      .then(async (job) => console.info(await job.waitUntilFinished()))
+      .catch((error) => console.error(error));
+
+    console.info(await this.memoryCacheManager.get<TestDto>('test2'), 'cache');
+
+    await this.memoryCacheManager.set('test2', body);
+
+    return { body };
   }
 }

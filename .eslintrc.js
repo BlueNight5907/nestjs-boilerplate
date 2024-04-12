@@ -227,7 +227,7 @@ module.exports = {
       },
     ],
     '@typescript-eslint/type-annotation-spacing': 'error',
-    '@typescript-eslint/unified-signatures': 'error',
+    '@typescript-eslint/unified-signatures': 'off',
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-shadow': 'error',

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { AbstractDto } from 'common/dtos/abstract.dto';
 import { STATIC_TRANSLATION_DECORATOR_KEY } from 'decorators/translate';
 import { type ITranslationOptions as DefTranslationOptions } from 'definitions/interfaces';
 import { isArray, isString, map } from 'lodash';
 import { I18nService } from 'nestjs-i18n';
+import { ContextProvider } from 'providers';
 
-import { AbstractDto } from '../../../common/dtos/abstract.dto';
-import { ContextProvider } from '../../../providers';
 import {
   type ITranslateOptions,
   type ITranslationService,

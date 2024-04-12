@@ -1,3 +1,5 @@
+export * from './app-exception-to-http-exception.decorator';
+export * from './audit-log.decorator';
 export * from './auth.decorator';
 export * from './auth-user.decorator';
 export * from './public-route.decorator';

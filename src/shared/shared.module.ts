@@ -1,27 +1,30 @@
 import { Global, Module, type Provider } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
 
-import { FileSystemService, ParsePageOptionsService } from './common';
-import { ApiConfigService } from './common/api-config/api-config.service';
-import { AwsS3Service } from './common/aws-s3.service';
-import { GeneratorService } from './common/generator/generator.service';
-import { TranslationService } from './common/translation/translation.service';
-import { ValidatorService } from './common/validator.service';
+import { MemoryCacheModule, RedisCacheModule } from './caching';
+import {
+  ApiConfigService,
+  AwsS3Service,
+  FileSystemService,
+  TranslationService,
+  ValidatorService,
+} from './common';
+import { EventEmitterModule } from './event-bus';
+import {
+  InfraFactoryModule,
+  IORedisFactory,
+  NodeCacheFactory,
+} from './infra-factories';
+import { WinstonLoggerModule } from './logger';
+import { BullMqModule } from './queue';
 import {
   FILE_SYSTEM_SERVICE,
-  GENERATOR_SERVICE,
-  PARSE_PAGE_OPTIONS_SERVICE,
   TRANSLATION_SERVICE,
   VALIDATOR_SERVICE,
-} from './provider-tokens';
+} from './tokens';
 
 const providers: Provider[] = [
   ApiConfigService,
   AwsS3Service,
-  {
-    provide: GENERATOR_SERVICE,
-    useClass: GeneratorService,
-  },
   {
     provide: VALIDATOR_SERVICE,
     useClass: ValidatorService,
@@ -35,16 +38,44 @@ const providers: Provider[] = [
     provide: FILE_SYSTEM_SERVICE,
     useClass: FileSystemService,
   },
-  {
-    provide: PARSE_PAGE_OPTIONS_SERVICE,
-    useClass: ParsePageOptionsService,
-  },
 ];
 
 @Global()
 @Module({
   providers,
-  imports: [CqrsModule],
-  exports: [...providers, CqrsModule],
+  imports: [
+    WinstonLoggerModule,
+    InfraFactoryModule,
+    BullMqModule.forRootAsync({
+      useFactory: (factory: IORedisFactory) => ({
+        connection: factory.getClient(),
+      }),
+      inject: [IORedisFactory],
+    }),
+    RedisCacheModule.forRootAsync({
+      useFactory: (factory: IORedisFactory) => factory.getClient(),
+      inject: [IORedisFactory],
+    }),
+    MemoryCacheModule.forRootAsync({
+      useFactory: (factory: NodeCacheFactory) => factory.getCacheStore(),
+      inject: [NodeCacheFactory],
+    }),
+    EventEmitterModule.forRootAsync({
+      useFactory: (factory: IORedisFactory) => ({
+        pubClient: factory.getClient(),
+        subClient: factory.createNewClient({}),
+      }),
+      inject: [IORedisFactory],
+    }),
+  ],
+  exports: [
+    ...providers,
+    WinstonLoggerModule,
+    MemoryCacheModule,
+    RedisCacheModule,
+    BullMqModule,
+    EventEmitterModule,
+    InfraFactoryModule,
+  ],
 })
 export class SharedModule {}
